@@ -1,5 +1,6 @@
 package com.spring.food.domain.service;
 
+import com.spring.food.domain.exception.CozinhaNaoEncontradaException;
 import com.spring.food.domain.exception.EntidadeEmUsoException;
 import com.spring.food.domain.exception.EntidadeNaoEncontradaException;
 import com.spring.food.domain.model.Cozinha;
@@ -26,7 +27,7 @@ public class CadastroCozinhaService {
             cozinhaRepository.deleteById(cozinhaId);
 
         } catch (EmptyResultDataAccessException e) {
-            throw new EntidadeNaoEncontradaException(
+            throw new CozinhaNaoEncontradaException(
                     String.format(MSG_COZINHA_NAO_ENCONTRADA, cozinhaId));
 
         } catch (DataIntegrityViolationException e) {

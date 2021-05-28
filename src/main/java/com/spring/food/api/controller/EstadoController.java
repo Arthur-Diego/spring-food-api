@@ -23,6 +23,8 @@ import com.spring.food.domain.exception.EntidadeNaoEncontradaException;
 import com.spring.food.domain.repository.EstadoRepository;
 import com.spring.food.domain.service.CadastroEstadoService;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/estados")
 public class EstadoController {
@@ -45,7 +47,7 @@ public class EstadoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Estado adicionar(@RequestBody Estado estado) {
+    public Estado adicionar(@RequestBody @Valid Estado estado) {
         return cadastroEstado.salvar(estado);
     }
 

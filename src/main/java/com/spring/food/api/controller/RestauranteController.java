@@ -1,13 +1,11 @@
 package com.spring.food.api.controller;
 
-import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spring.food.domain.exception.EntidadeNaoEncontradaException;
 import com.spring.food.domain.model.Restaurante;
+import com.spring.food.domain.repository.RestauranteRepository;
+import com.spring.food.domain.service.CadastroRestauranteService;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,21 +14,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.spring.food.domain.exception.EntidadeNaoEncontradaException;
-import com.spring.food.domain.repository.RestauranteRepository;
-import com.spring.food.domain.service.CadastroRestauranteService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/restaurantes")
@@ -59,7 +50,7 @@ public class RestauranteController {
 	}
 	
 	@PostMapping
-	public ResponseEntity<?> adicionar(@RequestBody Restaurante restaurante) {
+	public ResponseEntity<?> adicionar(@RequestBody @Valid Restaurante restaurante) {
 		try {
 			restaurante = cadastroRestaurante.salvar(restaurante);
 			
@@ -126,8 +117,6 @@ public class RestauranteController {
 				field.setAccessible(true);
 
 				Object novoValor = ReflectionUtils.getField(field, restauranteOrigem);
-
-//			System.out.println(nomePropriedade + " = " + valorPropriedade + " = " + novoValor);
 
 				ReflectionUtils.setField(field, restauranteDestino, novoValor);
 			});

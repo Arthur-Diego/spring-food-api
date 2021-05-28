@@ -6,12 +6,17 @@ import com.fasterxml.jackson.databind.exc.PropertyBindingException;
 import com.spring.food.domain.exception.EntidadeEmUsoException;
 import com.spring.food.domain.exception.EntidadeNaoEncontradaException;
 import com.spring.food.domain.exception.NegocioException;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -23,11 +28,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     public static final String MSG_ERRO_GENERICA_USUARIO_FINAL
             = "Ocorreu um erro interno inesperado no sistema. Tente novamente e se "
             + "o problema persistir, entre em contato com o administrador do sistema.";
+
+    private final MessageSource messageSource;
 
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
@@ -83,6 +91,30 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 ex.getRequestURL());
         ErrorCustomized errorCustomized = createErrorCustomizedBuilder(status, ErrorCustomizedType.RECURSO_NAO_ENCONTRADO, detail)
                 .userMessage(MSG_ERRO_GENERICA_USUARIO_FINAL)
+                .build();
+        return handleExceptionInternal(ex, errorCustomized, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+        String detail = "Um ou mais campos estão inválidos. Faça o preenchimento correto e tente novamente.";
+
+        BindingResult bindingResult = ex.getBindingResult();
+
+        List<ErrorCustomized.Field> fields = bindingResult.getFieldErrors().stream().map(fieldError -> {
+
+            String message = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
+
+            return ErrorCustomized.Field.builder()
+                    .name(fieldError.getField())
+                    .fieldMessage(message)
+                    .build();
+        }).collect(Collectors.toList());
+
+        ErrorCustomized errorCustomized = createErrorCustomizedBuilder(status, ErrorCustomizedType.DADOS_INVALIDOS, detail)
+                .userMessage(detail)
+                .fields(fields)
                 .build();
         return handleExceptionInternal(ex, errorCustomized, headers, status, request);
     }
